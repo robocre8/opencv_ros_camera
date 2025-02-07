@@ -60,3 +60,16 @@ it publishes on topics:
   ```shell
   ros2 launch opencv_ros_camera camera_publisher.launch.py
   ```
+
+#
+
+#### View published camera data on your PC
+- install rqt_image_view
+  ```shell
+  sudo apt-get install ros-humble-rqt-image-view
+  ```
+  
+- run to view published images (compressed or raw)
+  ```shell
+  ros2 run rqt_image_view rqt_image_view
+  ```
