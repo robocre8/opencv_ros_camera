@@ -18,10 +18,10 @@ def generate_launch_description():
         name='camera_publisher',
         output='screen',
         parameters=[{'frame_id': "camera_optical",
-                      'port_no': 0,
-                      'frame_width': 320,
-                      'frame_height': 240,
-                      'compression_format': "png", # you can also use "jpeg"
+                      'port_no': 2,
+                      'frame_width': 640,
+                      'frame_height': 480,
+                      'compression_format': "jpeg", # you can also use "jpeg"
                       'publish_frequency': 30.0}
                     ],
     )
