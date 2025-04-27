@@ -20,7 +20,7 @@ def generate_launch_description():
         parameters=[{'frame_id': "camera_optical",
                       'port_no': 2,
                       'frame_width': 640,
-                      'frame_height': 480,
+                      'frame_height': 360,
                       'compression_format': "jpeg", # you can also use "jpeg"
                       'publish_frequency': 30.0}
                     ],
