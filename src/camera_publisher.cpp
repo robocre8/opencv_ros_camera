@@ -1,8 +1,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
-#include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
+
+#if __has_include(<cv_bridge/cv_bridge.hpp>)
+  #include <cv_bridge/cv_bridge.hpp>
+#else
+  #include <cv_bridge/cv_bridge.h>
+#endif
 
 class CameraPublisherNode : public rclcpp::Node
 {
