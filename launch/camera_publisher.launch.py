@@ -9,7 +9,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     cam_frame_id = "camera_optical"
-    
+
     camera_info_file = os.path.join(
         get_package_share_directory('opencv_ros_camera'),
         'config',
@@ -22,7 +22,7 @@ def generate_launch_description():
         name='camera_publisher',
         output='screen',
         parameters=[{'frame_id': f'{cam_frame_id}',
-                      'port_no': 2,
+                      'port_no': 0,
                       'frame_width': 640,
                       'frame_height': 360,
                       'publish_frequency': 30.0

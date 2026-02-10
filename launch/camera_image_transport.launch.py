@@ -29,7 +29,7 @@ def generate_launch_description():
 
     declare_port_no = DeclareLaunchArgument(
         'port_no',
-        default_value='2',
+        default_value='0',
         description='Camera device port number'
     )
 
