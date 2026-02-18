@@ -12,6 +12,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(image_transport REQUIRED)
+find_package(camera_info_manager REQUIRED)
 
 # Define the executable
 add_executable(camera_publisher src/camera_publisher.cpp)
@@ -27,6 +28,7 @@ ament_target_dependencies(camera_publisher
   cv_bridge
   OpenCV
   image_transport
+  camera_info_manager
 )
 
 # Install targets
@@ -36,6 +38,7 @@ install(TARGETS camera_publisher
 
 # Install launch files.
 install(DIRECTORY
+    config
     launch
     DESTINATION share/${PROJECT_NAME}/
 )

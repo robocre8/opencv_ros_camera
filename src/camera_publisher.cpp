@@ -9,6 +9,8 @@
   #include <cv_bridge/cv_bridge.h>
 #endif
 
+#include <camera_info_manager/camera_info_manager.hpp>
+
 class CameraPublisherNode : public rclcpp::Node
 {
 public:
@@ -20,6 +22,7 @@ public:
     this->declare_parameter<int>("frame_width", 640);
     this->declare_parameter<int>("frame_height", 480);
     this->declare_parameter<double>("publish_frequency", 30.0);
+    this->declare_parameter<std::string>("camera_info_url", "");
 
     // Get parameters
     frame_id_ = this->get_parameter("frame_id").as_string();
@@ -27,11 +30,22 @@ public:
     frame_width_ = this->get_parameter("frame_width").as_int();
     frame_height_ = this->get_parameter("frame_height").as_int();
     publish_frequency_ = this->get_parameter("publish_frequency").as_double();
+    camera_info_url_ = this->get_parameter("camera_info_url").as_string();
 
     // Create publishers
     // rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data));
     // qos.reliable();
     image_raw_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(frame_id_ + "/image", 10);
+    camera_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(frame_id_ + "/camera_info", 10);
+
+    // ---------------- CameraInfo Manager ----------------
+    camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(this, frame_id_, camera_info_url_);
+
+    if (camera_info_manager_->isCalibrated()) {
+      RCLCPP_INFO(this->get_logger(), "Loaded camera calibration file");
+    } else {
+      RCLCPP_WARN(this->get_logger(), "Camera not calibrated — using default CameraInfo");
+    }
 
     // Initialize OpenCV video capture
     cap_.open(port_no_);
@@ -57,20 +71,30 @@ private:
     cv::Mat frame;
     cap_ >> frame;
 
-    if (!frame.empty())
-    {
-      // Convert OpenCV frame to ROS Image message
-      auto raw_image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", frame).toImageMsg();
-      raw_image_msg->header.stamp = this->now();
-      raw_image_msg->header.frame_id = frame_id_;
-
-      // Publish raw and compressed images
-      image_raw_publisher_->publish(*raw_image_msg);
-    }
-    else
-    {
+    if (frame.empty()) {
       RCLCPP_WARN(this->get_logger(), "Failed to capture frame");
+      return;
     }
+
+    auto stamp = this->now();
+
+    // Convert OpenCV frame to ROS Image message
+    auto raw_image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", frame).toImageMsg();
+    raw_image_msg->header.stamp = stamp;
+    raw_image_msg->header.frame_id = frame_id_;
+
+    // Publish raw and compressed images
+    image_raw_publisher_->publish(*raw_image_msg);
+
+    // -------- Get + publish CameraInfo --------
+    auto cam_info = camera_info_manager_->getCameraInfo();
+
+    cam_info.header.stamp = stamp;
+    cam_info.header.frame_id = frame_id_;
+    cam_info.width = frame.cols;
+    cam_info.height = frame.rows;
+
+    camera_info_pub_->publish(cam_info);
   }
 
   // Node parameters
@@ -79,11 +103,15 @@ private:
   int frame_width_;
   int frame_height_;
   double publish_frequency_;
+  std::string camera_info_url_;
 
   cv::VideoCapture cap_;
 
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_raw_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> camera_info_manager_;
 };
 
 int main(int argc, char **argv)

@@ -1,3 +1,7 @@
+import os
+
+from ament_index_python.packages import get_package_share_directory
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -15,6 +19,7 @@ def generate_launch_description():
     image_height = LaunchConfiguration('image_height')
     publish_frequency = LaunchConfiguration('publish_frequency')
     jpeg_quality = LaunchConfiguration('jpeg_quality')
+    camera_info_file = LaunchConfiguration('camera_info_file')
 
     declare_cam_frame_id = DeclareLaunchArgument(
         'cam_frame_id',
@@ -52,6 +57,12 @@ def generate_launch_description():
         description='JPEG compression quality (0–100)'
     )
 
+    declare_camera_info_file = DeclareLaunchArgument(
+        'camera_info_file',
+        default_value=os.path.join(get_package_share_directory('opencv_ros_camera'), 'config', 'camera_info.yaml'),
+        description='yaml file containig the camera calibration data'
+    )
+
     # -----------------------------
     # Camera Node
     # -----------------------------
@@ -61,12 +72,16 @@ def generate_launch_description():
         name='camera_publisher',
         output='screen',
         parameters=[{
-            'frame_id': cam_frame_id,
-            'port_no': port_no,
-            'frame_width': image_width,
-            'frame_height': image_height,
-            'publish_frequency': publish_frequency,
-        }],
+                'frame_id': cam_frame_id,
+                'port_no': port_no,
+                'frame_width': image_width,
+                'frame_height': image_height,
+                'publish_frequency': publish_frequency,
+            },
+            {
+                'camera_info_url': ['file://', camera_info_file]
+            }
+        ],
     )
 
     # -----------------------------
@@ -100,6 +115,7 @@ def generate_launch_description():
         declare_image_height,
         declare_publish_frequency,
         declare_jpeg_quality,
+        declare_camera_info_file,
         opencv_ros_camera_node,
         image_compress_node
     ])
